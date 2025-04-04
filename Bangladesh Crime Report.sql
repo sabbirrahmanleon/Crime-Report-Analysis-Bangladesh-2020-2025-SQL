@@ -34,12 +34,30 @@ FROM crime_statistics;
 
 --Monthly Trend of Crimes
 
-SELECT
-        CONCAT(month, ' ', year) AS month_year,
-    SUM(total_cases) AS total_cases_per_month
-    FROM crime_statistics
-GROUP BY month, year
-ORDER BY year, EXTRACT(MONTH FROM TO_DATE(month, 'Month'));
+CREATE EXTENSION IF NOT EXISTS tablefunc; 
+SELECT * 
+FROM crosstab( 
+    $$ 
+    SELECT  
+        TO_CHAR(TO_DATE(month, 'Month'), 'Month') AS month_name, 
+        year, 
+        SUM(total_cases) AS total_cases 
+    FROM crime_statistics 
+    GROUP BY year, month 
+    ORDER BY  
+        EXTRACT(MONTH FROM TO_DATE(month, 'Month')),  
+        year 
+    $$, 
+    $$ SELECT DISTINCT year FROM crime_statistics ORDER BY year $$ 
+) AS ct ( 
+    month_name TEXT, 
+    "2020" INT, 
+    "2021" INT, 
+    "2022" INT, 
+    "2023" INT, 
+    "2024" INT, 
+    "2025" INT 
+);
 
 
 ----------------------------------------------------------------
